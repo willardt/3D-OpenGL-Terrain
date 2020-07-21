@@ -1,0 +1,17 @@
+#version 450 core
+
+layout (location = 0) in vec2 vertex;
+layout (location = 1) in vec2 position;
+
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 model;
+uniform float height_map[10000];
+
+out float color;
+
+void main() {
+	float y = height_map[gl_InstanceID * 6 + gl_VertexID];
+	color = y;
+	gl_Position = projection * view * vec4(vertex.x + position.x, y, vertex.y + position.y, 1.0);
+}

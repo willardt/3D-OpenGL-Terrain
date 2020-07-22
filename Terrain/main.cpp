@@ -69,7 +69,7 @@ void setup() {
 	SHADER = load_shaders(shader);
 	Environment::get().get_window()->get_camera()->attach_shader(SHADER);
 
-	TERRAIN = new Terrain(100, 100, 0.1, 0.1);
+	TERRAIN = new Terrain(100, 100, 1, 1);
 //	MESH = new Mesh();
 	//for(int i = 0; i < sizeof(VERTEX_BUFFER_DATA) / sizeof(*VERTEX_BUFFER_DATA); i+=3) {
 	//	MESH->_vertices.push_back(glm::vec3(VERTEX_BUFFER_DATA[i], VERTEX_BUFFER_DATA[i + 1], VERTEX_BUFFER_DATA[i + 2]));

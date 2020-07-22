@@ -53,6 +53,7 @@ private:
 	GLuint _vertex_buffer;
 	GLuint _position_buffer;
 	GLuint _height_buffer;
+	GLuint _height_texture;
 };
 
 #endif

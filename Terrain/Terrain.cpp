@@ -25,15 +25,24 @@ Terrain::Terrain(int width, int length, float segment_width, float segment_lengt
 
 	_height_map.resize(width * length);
 
-	adjust_height(1, 1, 5);
-	adjust_height(0, 1, 5);
-	adjust_height(0, 0, 5);
-	adjust_height(1, 0, 5);
 
-	adjust_height(5, 5, 1);
-	adjust_height(5, 4, 1);
-	adjust_height(4, 5, 1);
-	adjust_height(4, 4, 1);
+	
+	adjust_height(1, 1, 20);
+	adjust_height(0, 1, 20);
+	adjust_height(0, 0, 20);
+	adjust_height(1, 0, 20);
+
+	adjust_height(5, 5, 50);
+	adjust_height(5, 4, 50);
+	adjust_height(4, 5, 50);
+	adjust_height(4, 4, 50);
+
+	adjust_height(50, 50, 100);
+	adjust_height(50, 51, 100);
+	adjust_height(51, 50, 100);
+	adjust_height(51, 51, 100);
+	
+
 
 	//build_vertex_array();
 	build_buffers();
@@ -139,6 +148,10 @@ void Terrain::build_buffers() {
 	glBindBuffer(GL_ARRAY_BUFFER, _position_buffer);
 	glNamedBufferStorage(_position_buffer, sizeof(glm::vec2) * _positions.size(), &_positions[0], 0);
 
+	glCreateBuffers(1, &_height_buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, _height_buffer);
+	glNamedBufferStorage(_height_buffer, sizeof(GLfloat) * 6 * _height_map.size(), &_height_map[0], 0);
+
 	_program = 1;
 }
 
@@ -155,8 +168,11 @@ void Terrain::draw() {
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glVertexAttribDivisor(1, 1);
 
+	glCreateTextures(GL_TEXTURE_BUFFER, 1, &_height_texture);
+	glTextureBuffer(_height_texture, GL_R32F, _height_buffer);
+	glBindTextureUnit(0, _height_buffer);
 
 	glUniform1fv(glGetUniformLocation(_program, "height_map"), _height_map.size() * 6, &_height_map[0].height[0]);
 
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, _positions.size());
+	glDrawArraysInstanced(GL_LINES, 0, 6, _positions.size());
 }

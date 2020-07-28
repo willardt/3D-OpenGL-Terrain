@@ -1,6 +1,8 @@
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 
+#include <iostream>
+
 #include "Environment.h"
 #include "Clock.h"
 #include "Window.h"
@@ -10,12 +12,17 @@
 #include "Model.h"
 #include "Terrain.h"
 
+int TERRAIN_DRAW_MODE = GL_LINES;
+
 constexpr GLfloat BACKGROUND_COLOR[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 GLuint SHADER = 0;
 
 Mesh* MESH = nullptr;
 Terrain* TERRAIN = nullptr;
+
+float DEBUG_TILE_DRAW_X = 0.0f;
+float DEBUG_TILE_DRAW_Z = 0.0f;
 
 static const GLfloat VERTEX_BUFFER_DATA[] = {
 	-1.0f,-1.0f,-1.0f, // triangle 1 : begin
@@ -57,17 +64,31 @@ static const GLfloat VERTEX_BUFFER_DATA[] = {
 };
 
 void build_environment() {
-	Clock* clock = new Clock(0);
+	Clock* clock = new Clock(144);
 	Environment::get().set_clock(clock);
 
 	Window* window = new Window();
 	Environment::get().set_window(window);
 }
 
+void mouse_scroll(GLFWwindow* window, double xoffset, double yoffset) {
+	auto camera = Environment::get().get_window()->get_camera();
+	if (yoffset < 0) {
+		camera->move(CAMERA_UP, 50000.0f);
+	}
+	if (yoffset > 0) {
+		camera->move(CAMERA_DOWN, 50000.0f);
+	}
+}
+
 void setup() {
 	Program shader[] = { GL_VERTEX_SHADER, "Data\\vertex_shader.txt", GL_FRAGMENT_SHADER, "Data\\fragment_shader.txt", GL_NONE, "" };
 	SHADER = load_shaders(shader);
 	Environment::get().get_window()->get_camera()->attach_shader(SHADER);
+
+	Program shader2[] = { GL_VERTEX_SHADER, "Data\\vertex_shader2.txt", GL_FRAGMENT_SHADER, "Data\\fragment_shader2.txt", GL_NONE, "" };
+	GLuint shader2_id = load_shaders(shader2);
+	Environment::get().get_window()->get_camera()->attach_shader(shader2_id);
 
 	TERRAIN = new Terrain(100, 100, 1, 1);
 //	MESH = new Mesh();
@@ -77,11 +98,42 @@ void setup() {
 
 //	MESH->_vertices = TERRAIN->get_vertices();
 //	MESH->load_buffers();
+
+	glfwSetScrollCallback(Environment::get().get_window()->get_glfw_window(), &mouse_scroll);
+}
+
+void mouse_hover() {
+	auto window = Environment::get().get_window()->get_glfw_window();
+	auto camera = Environment::get().get_window()->get_camera();
+
+	double xpos, ypos;
+	glfwGetCursorPos(window, &xpos, &ypos);
+	int width, height;
+	glfwGetWindowSize(window, &width, &height);
+	const float xpos_norm = xpos / (width / 2) - 1.0f;
+	const float ypos_norm = -(ypos / (height / 2) - 1.0f);
+
+	const glm::vec4 clip_space(xpos_norm, ypos_norm, -1.0f, 1.0f);
+	const glm::mat4 inverse_projection = glm::inverse(camera->get_projection());
+	glm::vec4 view_space = inverse_projection * clip_space;
+	view_space.z = -1.0f;
+	view_space.w = 0.0f;
+	const glm::mat4 inverse_view = glm::inverse(camera->get_view());
+	glm::vec3 world_space = inverse_view * view_space;
+	world_space = glm::normalize(world_space);
+
+	const float y_dif = abs(camera->get_position().y / world_space.y);
+	const float tile_x = y_dif * world_space.x + camera->get_position().x;
+	const float tile_z = y_dif * world_space.z + camera->get_position().z;
+
+	DEBUG_TILE_DRAW_X = (float)(int)tile_x;
+	DEBUG_TILE_DRAW_Z = (float)(int)tile_z;
 }
 
 void input() {
 	glfwPollEvents();
 
+	auto main_window = Environment::get().get_window();
 	auto window = Environment::get().get_window()->get_glfw_window();
 	auto camera = Environment::get().get_window()->get_camera();
 
@@ -89,12 +141,27 @@ void input() {
 		return;
 	}
 
-	double xpos, ypos;
-	glfwGetCursorPos(window, &xpos, &ypos);
-	camera->move_angle((float)xpos, (float)ypos);
-	int width, height;
-	glfwGetWindowSize(window, &width, &height);
-	glfwSetCursorPos(window, width / 2, height / 2);
+	mouse_hover();
+
+	if (camera->get_mode() == CAMERA_FREE) {
+		double xpos, ypos;
+		glfwGetCursorPos(window, &xpos, &ypos);
+		camera->move_angle((float)xpos, (float)ypos);
+		int width, height;
+		glfwGetWindowSize(window, &width, &height);
+		glfwSetCursorPos(window, width / 2, height / 2);
+	}
+
+	static bool key_1 = false;
+	if(glfwGetKey(window, GLFW_KEY_1)) {
+		if (!key_1) {
+			camera->mode(CAMERA_TOGGLE);
+			key_1 = true;
+		}
+	}
+	else {
+		key_1 = false;
+	}
 
 	if(glfwGetKey(window, GLFW_KEY_W)) {
 		camera->move(CAMERA_FORWARD);
@@ -114,6 +181,57 @@ void input() {
 	if(glfwGetKey(window, GLFW_KEY_E)) {
 		camera->move(CAMERA_UP);
 	}
+
+	static bool key_2 = false;
+	if(glfwGetKey(window, GLFW_KEY_2)) {
+		if (!key_2) {
+			if(TERRAIN_DRAW_MODE == GL_LINES) {
+				TERRAIN_DRAW_MODE = GL_TRIANGLES;
+			}
+			else if (TERRAIN_DRAW_MODE = GL_TRIANGLES) {
+				TERRAIN_DRAW_MODE = GL_LINES;
+			}
+			key_2 = true;
+		}
+	}
+	else {
+		key_2 = false;
+	}
+
+	static bool mouse_1 = false;
+	//if(camera->get_mode() == CAMERA_LOCKED) {
+		if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1)) {
+			if (!mouse_1) {
+				TERRAIN->adjust_tile_height(DEBUG_TILE_DRAW_X, DEBUG_TILE_DRAW_Z, 5);
+				mouse_1 = true;
+			}
+		}
+		else {
+			mouse_1 = false;
+		}
+	//}
+}
+
+void debug_draw_tile() {
+	static Mesh tile;
+
+	static bool load = false;
+	if (!load) {
+		static std::vector<glm::vec3> vertices;
+		vertices.push_back({ 0.0f, 0.01f, 0.0f });
+		vertices.push_back({ 1.0f, 0.01f, 0.0f });
+		vertices.push_back({ 0.0f, 0.01f, 1.0f });
+		vertices.push_back({ 0.0f, 0.01f, 1.0f });
+		vertices.push_back({ 1.0f, 0.01f, 0.0f });
+		vertices.push_back({ 1.0f, 0.01f, 1.0f });
+
+		tile._vertices = vertices;
+		tile.load_buffers();
+		load = true;
+	}
+
+	Transform position({ DEBUG_TILE_DRAW_X, 0.0f, DEBUG_TILE_DRAW_Z });
+	tile.draw_vertices(2, position, GL_TRIANGLES);
 }
 
 void render() {
@@ -123,7 +241,8 @@ void render() {
 	//static Transform transform;
 	//MESH->draw_vertices(SHADER, transform, GL_LINE_STRIP);
 	
-	TERRAIN->draw();
+	TERRAIN->draw(TERRAIN_DRAW_MODE);
+	debug_draw_tile();
 
 	//static Model model(1, "Data\\", "link.obj");
 	//model.draw(transform);

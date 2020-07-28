@@ -7,108 +7,49 @@ constexpr GLfloat SEGMENT_VERTEX_DATA[12] =   { 0.0f, 0.0f,
 												1.0f, 0.0f,
 												1.0f, 1.0f};
 
-Terrain::Terrain(int width, int length, float segment_width, float segment_length) :
-	_width(width),
-	_length(length),
-	_segment_width(segment_width),
-	_segment_length(segment_length)
+Terrain::Terrain(int width, int length, float tile_width, float tile_length) :
+	_width					( width ),
+	_length					( length ),
+	_tile_width				( tile_width ),
+	_tile_length			( tile_length )
 {
-	/*
-	_segments.resize(_length);
-	for (auto& col : _segments) {
-		col.resize(_width);
-	}
-	*/
 
 	generate_vertex_data();
 	generate_position_data();
 
 	_height_map.resize(width * length);
 
-
-	
-	adjust_height(1, 1, 20);
-	adjust_height(0, 1, 20);
-	adjust_height(0, 0, 20);
-	adjust_height(1, 0, 20);
-
-	adjust_height(5, 5, 50);
-	adjust_height(5, 4, 50);
-	adjust_height(4, 5, 50);
-	adjust_height(4, 4, 50);
-
-	adjust_height(50, 50, 100);
-	adjust_height(50, 51, 100);
-	adjust_height(51, 50, 100);
-	adjust_height(51, 51, 100);
-	
-
-
-	//build_vertex_array();
 	build_buffers();
 }
 
-/*
-void Terrain::generate_terrain() {
-	Triangle t_one;
-	Triangle t_two;
-
-	for (int i = 0; i < _length; ++i) {
-		t_one.vertex1.z = _segment_length * (i + 1);
-		t_one.vertex2.z = _segment_length * i;
-		t_one.vertex3.z = _segment_length * i;
-
-		t_two.vertex1.z = t_one.vertex1.z;
-		t_two.vertex2.z = t_one.vertex1.z;
-		t_two.vertex3.z = t_one.vertex3.z;
-		for (int j = 0; j < _width; ++j) {
-			t_one.vertex1.x = _segment_width * j;
-			t_one.vertex2.x = _segment_width * j;
-			t_one.vertex3.x = _segment_width * (j + 1);
-
-			t_two.vertex1.x = t_one.vertex1.x;
-			t_two.vertex2.x = t_one.vertex3.x;
-			t_two.vertex3.x = t_one.vertex3.x;
-
-			_segments[i][j] = { t_one, t_two };
-		}
-	}
+Terrain::~Terrain() {
+	glDeleteTextures(1, &_height_texture);
 }
-*/
 
 void Terrain::generate_vertex_data() {
 	_vertex_data.reserve(6);
 	_vertex_data.push_back(glm::vec2(0.0f, 0.0f));
-	_vertex_data.push_back(glm::vec2(_segment_width, 0.0f));
-	_vertex_data.push_back(glm::vec2(0.0f, _segment_length));
-	_vertex_data.push_back(glm::vec2(0.0f, _segment_length));
-	_vertex_data.push_back(glm::vec2(_segment_width, 0.0f));
-	_vertex_data.push_back(glm::vec2(_segment_width, _segment_length));
+	_vertex_data.push_back(glm::vec2(_tile_width, 0.0f));
+	_vertex_data.push_back(glm::vec2(0.0f, _tile_length));
+	_vertex_data.push_back(glm::vec2(0.0f, _tile_length));
+	_vertex_data.push_back(glm::vec2(_tile_width, 0.0f));
+	_vertex_data.push_back(glm::vec2(_tile_width, _tile_length));
 }
 
 void Terrain::generate_position_data() {
 	for (int i = 0; i < _length; ++i) {
 		for (int j = 0; j < _width; ++j) {
-			_positions.push_back(glm::vec2(j * _segment_width, i * _segment_length));
+			_positions.push_back(glm::vec2(j * _tile_width, i * _tile_length));
 		}
 	}
 }
 
-/*
-void Terrain::build_vertex_array() {
-	_vertices.clear();
-	for (auto& col : _segments) {
-		for (auto& segment : col) {
-			_vertices.push_back(segment.triangle1.vertex1);
-			_vertices.push_back(segment.triangle1.vertex2);
-			_vertices.push_back(segment.triangle1.vertex3);
-			_vertices.push_back(segment.triangle2.vertex1);
-			_vertices.push_back(segment.triangle2.vertex2);
-			_vertices.push_back(segment.triangle2.vertex3);
-		}
-	}
+void Terrain::adjust_tile_height(int x, int z, float height) {
+	adjust_height(x, z, height);
+	adjust_height(x + 1, z, height);
+	adjust_height(x, z + 1, height);
+	adjust_height(x + 1, z + 1, height);
 }
-*/
 
 void Terrain::adjust_height(int x, int z, float height) {
 	if(z < 0 || z >= _length ||
@@ -135,6 +76,9 @@ void Terrain::adjust_vertex_height(int index, int vertex, float height) {
 	}
 
 	_height_map[index].height[vertex] = height;
+
+	glBindBuffer(GL_ARRAY_BUFFER, _height_buffer);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * index + sizeof(GLfloat) * vertex, sizeof(GLfloat), &_height_map[index].height[vertex]);
 }
 
 void Terrain::build_buffers() {
@@ -150,12 +94,14 @@ void Terrain::build_buffers() {
 
 	glCreateBuffers(1, &_height_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, _height_buffer);
-	glNamedBufferStorage(_height_buffer, sizeof(GLfloat) * 6 * _height_map.size(), &_height_map[0], 0);
+	glNamedBufferStorage(_height_buffer, sizeof(GLfloat) * 6 * _height_map.size(), &_height_map[0], GL_DYNAMIC_STORAGE_BIT);
+
+	glCreateTextures(GL_TEXTURE_BUFFER, 1, &_height_texture);
 
 	_program = 1;
 }
 
-void Terrain::draw() {
+void Terrain::draw(int mode) {
 	glBindVertexArray(_vao);
 	glUseProgram(_program);
 
@@ -168,11 +114,21 @@ void Terrain::draw() {
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glVertexAttribDivisor(1, 1);
 
-	glCreateTextures(GL_TEXTURE_BUFFER, 1, &_height_texture);
+	glBindTexture(GL_TEXTURE_BUFFER, _height_texture);
 	glTextureBuffer(_height_texture, GL_R32F, _height_buffer);
 	glBindTextureUnit(0, _height_buffer);
 
-	glUniform1fv(glGetUniformLocation(_program, "height_map"), _height_map.size() * 6, &_height_map[0].height[0]);
+	glDrawArraysInstanced(mode, 0, 6, _positions.size());
 
-	glDrawArraysInstanced(GL_LINES, 0, 6, _positions.size());
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+	glBindTextureUnit(0, _height_buffer);
+}
+
+float Terrain::get_tile_width() {
+	return _tile_width;
+}
+
+float Terrain::get_tile_length() {
+	return _tile_length;
 }

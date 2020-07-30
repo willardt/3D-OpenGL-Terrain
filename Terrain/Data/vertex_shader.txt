@@ -1,5 +1,10 @@
 #version 450 core
 
+const int back[3] = { 0, 1, 1 };
+const int right[3] = { 1, 5, 5 };
+const int front[3] = { 5, 2, 2 };
+const int left[3] = { 2, 0, 0 };
+
 layout (location = 0) in vec2 vertex;
 layout (location = 1) in vec2 position;
 
@@ -11,8 +16,43 @@ uniform samplerBuffer height;
 
 out float color;
 
+float get_height() {
+	const int side = gl_VertexID / 6;
+	int vertex_index = gl_VertexID % 6;
+	if(side < 4) {
+		if(vertex_index == 0 || vertex_index == 1 || vertex_index == 4) {
+			if(vertex_index == 4) {
+				vertex_index = 2;
+			}
+
+			switch (side) {
+				case 0 :
+					vertex_index = back[vertex_index];
+					break;
+				case 1:
+					vertex_index = right[vertex_index];
+					break;
+				case 2:
+					vertex_index = front[vertex_index];
+					break;
+				case 3:
+					vertex_index = left[vertex_index];
+					break;
+			}
+
+			return texelFetch(height, vertex_index + 6 * gl_InstanceID).r;
+		}
+		else {
+			return 0.0f;		
+		}
+	}
+	
+	return texelFetch(height, vertex_index + 6 * gl_InstanceID).r;
+}
+
 void main() {
-	float y = texelFetch(height, gl_VertexID + 6 * gl_InstanceID).r;
+	float y = get_height();
 	color = y;
+		
 	gl_Position = projection * view * vec4(vertex.x + position.x, y, vertex.y + position.y, 1.0);
 }

@@ -17,11 +17,14 @@ public:
 
 	void draw(int mode);
 	void adjust_tile_height(int x, int z, float height);
+	void adjust_ramp_height(int x, int z);
 	void adjust_vertex_height(int index, int vertex, float height);
-	void adjust_height(int x, int z, float height);
 
 	float get_tile_width();
 	float get_tile_length();
+	std::vector<GLfloat> get_tile_height(int x, int z);
+	float get_vertex_height(int index, int vertex);
+	bool get_tile_is_flat(int index);
 private:
 	void generate_vertex_data();
 	void generate_position_data();
@@ -39,6 +42,7 @@ private:
 	GLuint _vao;
 	GLuint _program;
 	GLuint _vertex_buffer;
+	GLuint _vertex_buffer2;
 	GLuint _position_buffer;
 	GLuint _height_buffer;
 	GLuint _height_texture;

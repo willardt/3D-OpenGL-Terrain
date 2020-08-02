@@ -3,7 +3,7 @@
 #include "Environment.h"
 #include "Clock.h"
 
-constexpr float SPEED = 10000.0f;
+constexpr float SPEED = 30000.0f;
 constexpr float HALF_PIE = 3.14159f / 2.0f;
 constexpr float LOCKED_VERTICAL_ANGLE = -1.0f;
 

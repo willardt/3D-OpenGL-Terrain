@@ -93,15 +93,17 @@ void setup() {
 	Environment::get().get_window()->get_camera()->attach_shader(shader2_id);
 
 	TERRAIN = new Terrain(100, 100, 5, 5);
-//	MESH = new Mesh();
-	//for(int i = 0; i < sizeof(VERTEX_BUFFER_DATA) / sizeof(*VERTEX_BUFFER_DATA); i+=3) {
-	//	MESH->_vertices.push_back(glm::vec3(VERTEX_BUFFER_DATA[i], VERTEX_BUFFER_DATA[i + 1], VERTEX_BUFFER_DATA[i + 2]));
-	//}
+	//	MESH = new Mesh();
+		//for(int i = 0; i < sizeof(VERTEX_BUFFER_DATA) / sizeof(*VERTEX_BUFFER_DATA); i+=3) {
+		//	MESH->_vertices.push_back(glm::vec3(VERTEX_BUFFER_DATA[i], VERTEX_BUFFER_DATA[i + 1], VERTEX_BUFFER_DATA[i + 2]));
+		//}
 
-//	MESH->_vertices = TERRAIN->get_vertices();
-//	MESH->load_buffers();
+	//	MESH->_vertices = TERRAIN->get_vertices();
+	//	MESH->load_buffers();
 
 	glfwSetScrollCallback(Environment::get().get_window()->get_glfw_window(), &mouse_scroll);
+
+	
 }
 
 void mouse_hover() {
@@ -155,7 +157,7 @@ void input() {
 	}
 
 	static bool key_1 = false;
-	if(glfwGetKey(window, GLFW_KEY_1)) {
+	if (glfwGetKey(window, GLFW_KEY_1)) {
 		if (!key_1) {
 			camera->mode(CAMERA_TOGGLE);
 			key_1 = true;
@@ -165,29 +167,29 @@ void input() {
 		key_1 = false;
 	}
 
-	if(glfwGetKey(window, GLFW_KEY_W)) {
+	if (glfwGetKey(window, GLFW_KEY_W)) {
 		camera->move(CAMERA_FORWARD);
 	}
-	if(glfwGetKey(window, GLFW_KEY_S)) {
+	if (glfwGetKey(window, GLFW_KEY_S)) {
 		camera->move(CAMERA_BACKWARD);
 	}
-	if(glfwGetKey(window, GLFW_KEY_A)) {
+	if (glfwGetKey(window, GLFW_KEY_A)) {
 		camera->move(CAMERA_LEFT);
 	}
-	if(glfwGetKey(window, GLFW_KEY_D)) {
+	if (glfwGetKey(window, GLFW_KEY_D)) {
 		camera->move(CAMERA_RIGHT);
 	}
-	if(glfwGetKey(window, GLFW_KEY_Q)) {
+	if (glfwGetKey(window, GLFW_KEY_Q)) {
 		camera->move(CAMERA_DOWN);
 	}
-	if(glfwGetKey(window, GLFW_KEY_E)) {
+	if (glfwGetKey(window, GLFW_KEY_E)) {
 		camera->move(CAMERA_UP);
 	}
 
 	static bool key_2 = false;
-	if(glfwGetKey(window, GLFW_KEY_2)) {
+	if (glfwGetKey(window, GLFW_KEY_2)) {
 		if (!key_2) {
-			if(TERRAIN_DRAW_MODE != GL_TRIANGLES) {
+			if (TERRAIN_DRAW_MODE != GL_TRIANGLES) {
 				TERRAIN_DRAW_MODE = GL_TRIANGLES;
 			}
 			else if (TERRAIN_DRAW_MODE == GL_TRIANGLES) {
@@ -201,7 +203,7 @@ void input() {
 	}
 
 	static bool mouse_1 = false;
-	if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1)) {
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1)) {
 		if (!mouse_1) {
 			TERRAIN->adjust_tile_height(DEBUG_TILE_DRAW_X / TERRAIN->get_tile_width(), DEBUG_TILE_DRAW_Z / TERRAIN->get_tile_length(), 5);
 			UPDATE_DRAW_TILE = true;
@@ -232,17 +234,17 @@ void debug_draw_tile() {
 	static float tile_x, tile_z;
 	if (UPDATE_DRAW_TILE || tile_x != DEBUG_TILE_DRAW_X || tile_z != DEBUG_TILE_DRAW_Z)
 	{
-		tile_x = DEBUG_TILE_DRAW_X;
-		tile_z = DEBUG_TILE_DRAW_Z;
+		tile_x = DEBUG_TILE_DRAW_X / TERRAIN->get_tile_width();
+		tile_z = DEBUG_TILE_DRAW_Z / TERRAIN->get_tile_length();;
 		vertices.clear();
 		auto height = TERRAIN->get_tile_height(tile_x, tile_z);
 		const float width = TERRAIN->get_tile_width();
 		const float length = TERRAIN->get_tile_length();
-		vertices.push_back({ 0.0f, height[0] + 0.01f, 0.0f });
-		vertices.push_back({ width, height[1] + 0.01f, 0.0f });
+		vertices.push_back({ width, height[0] + 0.01f, 0.0f });
+		vertices.push_back({ 0.0f, height[1] + 0.01f, 0.0f });
 		vertices.push_back({ 0.0f, height[2] + 0.01f, length });
-		vertices.push_back({ 0.0f, height[3] + 0.01f, length });
-		vertices.push_back({ width, height[4] + 0.01f, 0.0f });
+		vertices.push_back({ width, height[3] + 0.01f, 0.0f });
+		vertices.push_back({ 0.0f, height[4] + 0.01f, length });
 		vertices.push_back({ width, height[5] + 0.01f, length });
 
 		tile._vertices = vertices;
@@ -276,7 +278,7 @@ void render() {
 
 	//static Transform transform;
 	//MESH->draw_vertices(SHADER, transform, GL_LINE_STRIP);
-	
+
 	TERRAIN->draw(TERRAIN_DRAW_MODE);
 	debug_draw_tile();
 
@@ -290,14 +292,14 @@ int main() {
 
 	glfwInit();
 
-	Environment environment;  
+	Environment environment;
 	build_environment();
 
 	setup();
 
 	auto window = Environment::get().get_window()->get_glfw_window();
 
-	while(!glfwWindowShouldClose(window) && !glfwGetKey(window, GLFW_KEY_ESCAPE)) {
+	while (!glfwWindowShouldClose(window) && !glfwGetKey(window, GLFW_KEY_ESCAPE)) {
 		render();
 		input();
 		Environment::get().get_clock()->update();

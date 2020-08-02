@@ -20,6 +20,7 @@ public:
 		);
 
 	void load_buffers();
+	void update_buffers();
 	void draw(const GLuint program, Transform& transform, int mode = GL_TRIANGLES);
 	void draw_vertices(const GLuint program, Transform& transform, int mode = GL_TRIANGLES);
 public:

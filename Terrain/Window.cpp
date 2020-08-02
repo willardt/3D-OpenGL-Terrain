@@ -21,7 +21,6 @@ Window::Window()
 	gl3wInit();
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	//glEnable(GL_CULL_FACE);
 
 	_camera = new Camera(settings.width, settings.height, 90.0f, 1.0f, 0.1f, 1000.0f, 3.14f, 0.0f, glm::vec3(0.0f, 1.0f, 5.0f));
 }

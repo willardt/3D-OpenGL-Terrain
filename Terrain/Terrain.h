@@ -6,8 +6,16 @@
 
 #include <vector>
 
+#include "Texture.h"
+
 struct Tile_Height {
 	GLfloat height[6] = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+};
+
+class Tile_Highlight {
+public:
+private:
+
 };
 
 class Terrain {
@@ -27,8 +35,10 @@ public:
 	bool get_tile_is_flat(int index);
 private:
 	void generate_vertex_data();
+	void generate_uv_data();
 	void generate_position_data();
-	void build_buffers();
+	void load_textures();
+	void create_vao();
 private:
 	int _width;
 	int _length;
@@ -36,16 +46,19 @@ private:
 	float _tile_length;
 
 	std::vector<glm::vec2> _vertex_data;
-	std::vector<glm::vec2> _positions;
+	std::vector<glm::vec2> _uv_data;
+	std::vector<glm::vec2> _position_data;
 	std::vector<Tile_Height> _height_map;
 
 	GLuint _vao;
 	GLuint _program;
 	GLuint _vertex_buffer;
-	GLuint _vertex_buffer2;
+	GLuint _uv_buffer;
 	GLuint _position_buffer;
 	GLuint _height_buffer;
 	GLuint _height_texture;
+
+	Texture _tile_texture;
 };
 
 #endif

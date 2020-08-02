@@ -2,8 +2,13 @@
 
 layout (location = 0) out vec3 f_color;
 
-in float color;
+in vec2 out_vertex;
+in vec2 out_uv;
+in float out_color;
+
+uniform sampler2D tile_texture;
 
 void main() {
-	f_color = vec3(0.0, color, 1.0);
+	f_color = texture(tile_texture, out_uv).xyz;
+	//f_color = vec3(out_uv.x, out_uv.y, 1);
 }

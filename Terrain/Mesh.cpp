@@ -21,6 +21,12 @@ Mesh::Mesh(
 }
 
 void Mesh::load_buffers() {
+	glDeleteVertexArrays(1, &_vao);
+	glDeleteBuffers(1, &_vertex_buffer);
+	glDeleteBuffers(1, &_uv_buffer);
+	glDeleteBuffers(1, &_normal_buffer);
+	glDeleteBuffers(1, &_indices_buffer);
+
 	glCreateVertexArrays(1, &_vao);
 
 	glCreateBuffers(1, &_vertex_buffer);

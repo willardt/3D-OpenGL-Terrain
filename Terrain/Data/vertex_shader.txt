@@ -1,12 +1,13 @@
 #version 450 core
 
-const int back[3] = { 0, 1, 1 };
-const int right[3] = { 1, 5, 5 };
-const int front[3] = { 5, 2, 2 };
-const int left[3] = { 2, 0, 0 };
+const int back[3] = { 1, 0, 0 };
+const int right[3] = { 0, 5, 5 };
+const int front[3] = { 5, 4, 4 };
+const int left[3] = { 2, 1, 1 };
 
 layout (location = 0) in vec2 vertex;
-layout (location = 1) in vec2 position;
+layout (location = 1) in vec2 uv;
+layout (location = 2) in vec2 position;
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -14,7 +15,9 @@ uniform mat4 model;
 
 uniform samplerBuffer height;
 
-out float color;
+out vec2 out_vertex;
+out vec2 out_uv;
+out float out_color;
 
 float get_height() {
 	const int side = gl_VertexID / 6;
@@ -52,7 +55,9 @@ float get_height() {
 
 void main() {
 	float y = get_height();
-	color = y;
+	out_vertex = vertex;
+	out_uv = uv;
+	out_color = y;
 		
 	gl_Position = projection * view * vec4(vertex.x + position.x, y, vertex.y + position.y, 1.0);
 }

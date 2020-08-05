@@ -4,7 +4,7 @@ layout (location = 0) out vec3 f_color;
 
 in vec2 out_vertex;
 in vec2 out_uv;
-in float out_color;
+in float out_height;
 
 uniform sampler2D tile_texture;
 

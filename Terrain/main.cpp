@@ -26,45 +26,6 @@ float DEBUG_TILE_DRAW_X = 0.0f;
 float DEBUG_TILE_DRAW_Z = 0.0f;
 bool UPDATE_DRAW_TILE = false;
 
-static const GLfloat VERTEX_BUFFER_DATA[] = {
-	-1.0f,-1.0f,-1.0f, // triangle 1 : begin
-	-1.0f,-1.0f, 1.0f,
-	-1.0f, 1.0f, 1.0f, // triangle 1 : end
-	1.0f, 1.0f,-1.0f, // triangle 2 : begin
-	-1.0f,-1.0f,-1.0f,
-	-1.0f, 1.0f,-1.0f, // triangle 2 : end
-	1.0f,-1.0f, 1.0f,
-	-1.0f,-1.0f,-1.0f,
-	1.0f,-1.0f,-1.0f,
-	1.0f, 1.0f,-1.0f,
-	1.0f,-1.0f,-1.0f,
-	-1.0f,-1.0f,-1.0f,
-	-1.0f,-1.0f,-1.0f,
-	-1.0f, 1.0f, 1.0f,
-	-1.0f, 1.0f,-1.0f,
-	1.0f,-1.0f, 1.0f,
-	-1.0f,-1.0f, 1.0f,
-	-1.0f,-1.0f,-1.0f,
-	-1.0f, 1.0f, 1.0f,
-	-1.0f,-1.0f, 1.0f,
-	1.0f,-1.0f, 1.0f,
-	1.0f, 1.0f, 1.0f,
-	1.0f,-1.0f,-1.0f,
-	1.0f, 1.0f,-1.0f,
-	1.0f,-1.0f,-1.0f,
-	1.0f, 1.0f, 1.0f,
-	1.0f,-1.0f, 1.0f,
-	1.0f, 1.0f, 1.0f,
-	1.0f, 1.0f,-1.0f,
-	-1.0f, 1.0f,-1.0f,
-	1.0f, 1.0f, 1.0f,
-	-1.0f, 1.0f,-1.0f,
-	-1.0f, 1.0f, 1.0f,
-	1.0f, 1.0f, 1.0f,
-	-1.0f, 1.0f, 1.0f,
-	1.0f,-1.0f, 1.0f
-};
-
 void build_environment() {
 	Clock* clock = new Clock(0);
 	Environment::get().set_clock(clock);
@@ -92,7 +53,7 @@ void setup() {
 	GLuint shader2_id = load_shaders(shader2);
 	Environment::get().get_window()->get_camera()->attach_shader(shader2_id);
 
-	TERRAIN = new Terrain(100, 100, 5, 5);
+	TERRAIN = new Terrain(100, 100, 10, 10);
 	//	MESH = new Mesh();
 		//for(int i = 0; i < sizeof(VERTEX_BUFFER_DATA) / sizeof(*VERTEX_BUFFER_DATA); i+=3) {
 		//	MESH->_vertices.push_back(glm::vec3(VERTEX_BUFFER_DATA[i], VERTEX_BUFFER_DATA[i + 1], VERTEX_BUFFER_DATA[i + 2]));
@@ -202,10 +163,11 @@ void input() {
 		key_2 = false;
 	}
 
+	TERRAIN->select(DEBUG_TILE_DRAW_X / TERRAIN->get_tile_width(), DEBUG_TILE_DRAW_Z / TERRAIN->get_tile_length());
 	static bool mouse_1 = false;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1)) {
 		if (!mouse_1) {
-			TERRAIN->adjust_tile_height(DEBUG_TILE_DRAW_X / TERRAIN->get_tile_width(), DEBUG_TILE_DRAW_Z / TERRAIN->get_tile_length(), 5);
+			TERRAIN->adjust_tile_height(8);
 			UPDATE_DRAW_TILE = true;
 			mouse_1 = true;
 		}
@@ -217,7 +179,7 @@ void input() {
 	static bool mouse_2 = false;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2)) {
 		if (!mouse_2) {
-			TERRAIN->adjust_ramp_height(DEBUG_TILE_DRAW_X / TERRAIN->get_tile_width(), DEBUG_TILE_DRAW_Z / TERRAIN->get_tile_length());
+			TERRAIN->adjust_ramp_height();
 			UPDATE_DRAW_TILE = true;
 			mouse_2 = true;
 		}
@@ -228,6 +190,7 @@ void input() {
 }
 
 void debug_draw_tile() {
+	/*
 	static std::vector<glm::vec3> vertices;
 	static Mesh tile;
 
@@ -270,6 +233,7 @@ void debug_draw_tile() {
 
 	Transform position({ DEBUG_TILE_DRAW_X, 0.0f, DEBUG_TILE_DRAW_Z });
 	tile.draw_vertices(2, position, GL_TRIANGLES);
+	*/
 }
 
 void render() {
@@ -280,7 +244,7 @@ void render() {
 	//MESH->draw_vertices(SHADER, transform, GL_LINE_STRIP);
 
 	TERRAIN->draw(TERRAIN_DRAW_MODE);
-	debug_draw_tile();
+	//debug_draw_tile();
 
 	//static Model model(1, "Data\\", "link.obj");
 	//model.draw(transform);
